@@ -87,22 +87,23 @@ namespace ConsoleSnakeGame
         // This method prompts the user to choose a map size for the Snake Game. It presents three options: 24x24, 36x36, or EXIT. The user's input is read and parsed as an integer. Depending on the input, the method either returns the chosen size (1 or 2) or exits the program if the user selects option 3. If the input is invalid, it prompts the user again for a valid choice.
         private static int ChooseMapSize()
         {
-            int input = 0;
-            Console.WriteLine("Welcome to the Snake Game! \n !!Choose the Map Size.!! \n 1 : 24*24 \n 2 : 36*36  \n 3 : EXIT");
-            input = int.Parse(Console.ReadLine()!);//TODO: Add input validation to handle non-integer inputs and out-of-range values.
-            switch (input)
+            while (true)
             {
-                case 1:
-                case 2:
+                int input = 0;
+                Console.WriteLine("Welcome to the Snake Game! \n !!Choose the Map Size.!! \n 1 : 24*24 \n 2 : 36*36  \n 3 : EXIT");
+                string? inputChar = Console.ReadLine();
+                if ((int.TryParse(inputChar, out input)) && input >= 1 && input <= 3)
+                {
+                    if (input == 3)
+                    {
+                        Environment.Exit(0);
+                    }
                     return input;
-                case 3:
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Invalid choice. Please select a valid option.");
-                    return ChooseMapSize();
+
+                }
+                Console.Clear();
+                Console.WriteLine("Invalid input. Please enter a number between 1 and 3.");
             }
-            return input;
         }
 
 
