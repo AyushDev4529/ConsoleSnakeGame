@@ -37,58 +37,91 @@ namespace ConsoleSnakeGame
         }
 
         // This method updates the game map with the current positions of the snake and the food. It takes a 2D character array representing the map, an array containing the snake's X and Y coordinates, and an array containing the food's X and Y coordinates. The method updates the map by placing a '0' character at the snake's position and an 'F' character at the food's position. This allows for visual representation of the snake and food on the game map.
-        public static void UpdateMap(char[,] map, int[] snakePosXY, int[][] foodXY)
+        public static void UpdateMap(char[,] map, List<int[]> snakeBody, int[][] foodXY)
         {
-            int snakeX = snakePosXY[0];
-            int snakeY = snakePosXY[1];
-            for(int i = 0; i < foodXY.Length; i++)
+            int snakeX = snakeBody[0][0];
+            int snakeY = snakeBody[0][1];
+
+            for(int i = 0; i < snakeBody.Count; i++)
+            {
+                int bodyX = snakeBody[i][0];
+                int bodyY = snakeBody[i][1];
+                map[bodyX, bodyY] = '0'; // Represent snake body with '0'
+            }
+        
+
+            for (int i = 0; i < foodXY.Length; i++)
             {
                 int foodX = foodXY[i][0];
                 int foodY = foodXY[i][1];
                 map[foodX, foodY] = 'F'; // Represent food with 'F'
             }
+        }
+
+      public static void ClearMap(char[,] map, List<int[]> snakeBody)
+        {
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    map[i, j] = '.'; // Reset the map to empty
+                }
+            }
+            // Clear the snake's previous positions from the map
+            for (int i = 0; i < snakeBody.Count; i++)
+            {
+                int bodyX = snakeBody[i][0];
+                int bodyY = snakeBody[i][1];
+                if (bodyX >= 0 && bodyX < map.GetLength(0) && bodyY >= 0 && bodyY < map.GetLength(1))
+                {
+                    map[bodyX, bodyY] = '.'; // Clear the snake's position
+                }
+            }
+            
+        }
+
+        // This method handles the movement of the snake based on player input. It takes a character input representing the direction (W, A, S, D) and updates the snake's position accordingly. The method also checks if the snake is eating food and adjusts the snake's body length accordingly. If the snake is not eating food, it removes the tail segment to maintain the same length. The method modifies the snakeBody list to reflect the new positions of the snake's segments.
+        public static void PlayerMovement(char input, List<int[]> snakeBody, bool isEatingFood)
+        {
+            int snakePosX = snakeBody[0][0];
+            int snakePosY = snakeBody[0][1];
+            int newHeadX = snakePosX;
+            int newHeadY = snakePosY;
+
 
             
-            map[snakeX, snakeY] = '0'; // Represent the snake with '0'
-        }
+                switch (input)
+                {
+                    case 'W':
+                        newHeadX--; // Move up
+                        break;
+                    case 'A':
+                        newHeadY--; // Move left
+                        break;
+                    case 'S':
+                        newHeadX++; // Move down
+                        break;
+                    case 'D':
+                        newHeadY++; // Move right
+                        break;
+                    case 'Q':
+                        Environment.Exit(0);// Exit the game
+                        break;
+                }
+            
+            
 
-        // This method clears the previous position of the snake on the game map. It takes a 2D character array representing the map and an array containing the snake's current and previous X and Y coordinates. The method updates the map by replacing the character at the snake's previous position with a '.' character, effectively clearing that position. This is important for maintaining an accurate representation of the snake's movement on the map.
-        public static void ClearMap(char[,] map, int[] snakePosXY)
-        {
-            int oldSnakeX = snakePosXY[2];
-            int oldSnakeY = snakePosXY[3];
-            map[oldSnakeX, oldSnakeY] = '.'; // Clear the old snake position
-
-        }
-
-        // This method handles the player's input for controlling the snake's movement in the Snake Game. It takes a character input representing the direction (W, A, S, D) and an array containing the snake's current X and Y coordinates. The method updates the snake's position based on the input: 'W' moves up, 'A' moves left, 'S' moves down, and 'D' moves right. If the player inputs 'Q', the game exits. The method returns an array containing the updated snake position along with its previous position for clearing purposes.
-        public static int[] PlayerMovement(char input, int[] snakePos)
-        {
-            int snakePosX = snakePos[0];
-            int snakePosY = snakePos[1];
-            int oldSnakePosX = snakePosX;
-            int oldSnakePosY = snakePosY;
             // Update the snake's position based on the input (W, A, S, D)
-            switch (input)
+
+            snakeBody.Insert(0, new int[] { newHeadX, newHeadY, snakePosX, snakePosY }); // Add the new head position to the front of the list
+            if (!isEatingFood)
             {
-                case 'W':
-                    snakePosX--; // Move up
-                    break;
-                case 'A':
-                    snakePosY--; // Move left
-                    break;
-                case 'S':
-                    snakePosX++; // Move down
-                    break;
-                case 'D':
-                    snakePosY++; // Move right
-                    break;
-                case 'Q':
-                    Environment.Exit(0);// Exit the game
-                    break;
+                snakeBody.RemoveAt(snakeBody.Count - 1); // Remove the tail if not eating food
             }
-            return new int[4] { snakePosX, snakePosY ,oldSnakePosX , oldSnakePosY}; // Return the updated snake position
+
         }
+
+      
 
         // This method spawns food on the game map at a random position. It takes a 2D character array representing the map as input. The method generates random X and Y coordinates within the bounds of the map and checks if the position is empty (represented by '.'). If the position is empty, it places an 'F' character at that position to represent food. The method returns an array containing the X and Y coordinates of the spawned food.
         public static int[] SpawnFood(char[,] map)
@@ -142,29 +175,46 @@ namespace ConsoleSnakeGame
         }
 
         // This method detects if the snake has collided with the walls of the game map. It takes an array containing the snake's current X and Y coordinates and a 2D character array representing the map. The method checks if the snake's position is outside the bounds of the map. If a collision with a wall is detected, it prints a "Game Over" message and exits the game. This method is essential for ensuring that the player cannot move the snake outside the playable area.
-        public static bool DetectCollision(int[] snakePos, char[,] map)
+        public static bool DetectCollision(List<int[]> snakeBody, char[,] map)
         {
             bool isGameOver = false;
-            int snakeX = snakePos[0];
-            int snakeY = snakePos[1];
+            int snakeX = snakeBody[0][0];
+            int snakeY = snakeBody[0][1];
             // Check for collision with walls
             if (snakeX < 0 || snakeX >= map.GetLength(0) || snakeY < 0 || snakeY >= map.GetLength(1))
             {
-                
+
                 return isGameOver = true;
             }
             else
-                return isGameOver = false;
+            { 
+                 isGameOver = false; 
+            }
 
+            for (int i = 0; i < snakeBody.Count; i++)
+            {
+                int bodyX = snakeBody[i][0];
+                int bodyY = snakeBody[i][1];
+                // Check for collision with itself
+                if (i != 0 && snakeX == bodyX && snakeY == bodyY)
+                {
+                    return isGameOver = true;
+                }
+                else
+                {
+                    isGameOver = false;
+                }
+            }
+            return isGameOver;
 
         }
 
         // This method detects if the snake has collided with the food on the game map. It takes an array containing the snake's current X and Y coordinates, an array containing the food's X and Y coordinates, and a 2D character array representing the map. The method checks if the snake's position matches the food's position. If a collision is detected, it prints a message indicating that the food has been eaten and spawns new food at a random position on the map. The food's position is updated accordingly.
-        public static int DetectFoodCollision(int[] snakePos, int[][] foodPos, char[,] map)
+        public static bool DetectFoodCollision(List<int[]> snakeBody, int[][] foodPos, char[,] map)
         {
-            int snakeX = snakePos[0];
-            int snakeY = snakePos[1];
-            int Score = 0;
+            int snakeX = snakeBody[0][0];
+            int snakeY = snakeBody[0][1];
+            bool isEaten = false;
             for (int i = 0; i < foodPos.Length; i++)
             {
                 int foodX = foodPos[i][0];
@@ -172,7 +222,7 @@ namespace ConsoleSnakeGame
                 // Check for collision with food
                 if (snakeX == foodX && snakeY == foodY)
                 {
-                    Score++;
+                    isEaten = true;
                     Console.WriteLine("You ate the food!");
                     
                     // Spawn new food
@@ -181,7 +231,16 @@ namespace ConsoleSnakeGame
                     foodPos[i][1] = newFoodPos[1];
                 }
             }
-            return Score;
+            return isEaten;
         }
-}
+
+    
+
+        public static int CountScore(bool isEating,int prevScore)
+        {
+
+            prevScore++;
+            return prevScore;
+        }
+    }
 }

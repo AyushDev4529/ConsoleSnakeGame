@@ -1,8 +1,5 @@
 ﻿using System;
 
-//TODO :  Check for collision with Snake itself
-//TODO :  Implement Snake Growth on Eating Food
-
 namespace ConsoleSnakeGame
 {
     internal class Program
@@ -17,31 +14,56 @@ namespace ConsoleSnakeGame
         private static void GameLogic()
         {
             bool isGameOver = false;
+            bool isEatingFood = false;
             int score = 0;
             Console.Clear();    
             int choice = InputHandler.ChooseMapSize();
             char[,] map = GameManager.MapGenrator(choice);
-
+            List<int[]> snakeBody = new List<int[]>();
             int[] snakePos = GameManager.SnakePos(map);
+            snakeBody.Add(snakePos);
             int[][] fruitPos = GameManager.SpawnFoodMultiple(map);
+
+            Console.WriteLine("Press 'W' to move up, 'S' to move down, 'A' to move left, and 'D' to move right.");
+            char playerInput = InputHandler.PlayerInput();
 
             while (!isGameOver)
             {
                 Renderer.ClearScreen();
-                GameManager.ClearMap(map, snakePos);
-                isGameOver = GameManager.DetectCollision(snakePos, map);
+                GameManager.ClearMap(map, snakeBody);
+                isGameOver = GameManager.DetectCollision(snakeBody, map);
+
+
+
                 if (!isGameOver)
                 {
-                    score += GameManager.DetectFoodCollision(snakePos, fruitPos, map);
+
+                    isEatingFood = GameManager.DetectFoodCollision(snakeBody, fruitPos, map);
+                    
+
                     Renderer.DisplayScore(score);
-                    GameManager.UpdateMap(map, snakePos, fruitPos);
+                    GameManager.UpdateMap(map, snakeBody, fruitPos);
 
                     Renderer.DisplayMap(map);
                     Console.WriteLine("\nPress 'Q' to quit the game.");
 
-                    char playerInput = InputHandler.PlayerInput();
+                    System.Threading.Thread.Sleep(300);
 
-                    snakePos = GameManager.PlayerMovement(playerInput, snakePos);
+                    while(Console.KeyAvailable)
+                    {
+                        playerInput = InputHandler.PlayerInput();
+                    }
+                  
+                        
+                   
+
+                GameManager.PlayerMovement(playerInput,snakeBody,isEatingFood);
+                    if(isEatingFood)
+                    {
+                        score = GameManager.CountScore(isEatingFood,score);
+                        isEatingFood = false;
+                    }
+
                 }
             }
 
