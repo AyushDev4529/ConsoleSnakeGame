@@ -23,11 +23,17 @@ namespace ConsoleSnakeGame
 
         }
 
-        public static void DisplayGameOver()
+        public static void DisplayScore(int score)
+        {
+            Console.WriteLine($"Score: {score}");
+        }
+
+        public static void DisplayGameOver(int score)
         {
             Console.Clear();
             Console.WriteLine("Game Over! Press any key to exit.");
-            Console.ReadKey();
+            DisplayScore(score);
+            Environment.Exit(0 );
         }
     }
 }
